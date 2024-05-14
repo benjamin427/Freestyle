@@ -1,18 +1,31 @@
 pipeline {
     agent any 
 
-    tools {nodejs: "NodeJS 22.1.0"}
+   parameters {
+       string(name: 'SPEC', defaultValue: 'cypress/features/**', description: 'Enter the script path to execute')
+       choice(name: 'BROWSER', choices: ['chrome', 'edge', 'firefox'], description: 'Choose the browser to execute')
+   }
 
     stages {
-        stage('Dependencies') {
+        stage('Building') {
             steps {
-                bat 'npm i' 
+                echo 'Building the application' 
             }
         }
-        stage('e2e Tests') {
+        stage('Testing') {
             steps {
-                bat 'npm run cypress:run'
+                bat 'npm i'
+                bat 'npx cypress run --browser ${BROWSER} --spec ${SPEC}'
             }
         }
+        stage('Deploying') {
+            steps {
+                echo 'Deploying the application'
+            }
+        }
+    }
+
+    post {
+        publishHTML([allowMissing: false, alwaysLinkToLastBuild: false, keepAll: false, reportDir: 'cypress/report', reportFiles: 'index.html', reportName: 'HTML Report', reportTitles: '', useWrapperFileDirectly: true])
     }
 }
